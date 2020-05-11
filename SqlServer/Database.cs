@@ -12,7 +12,7 @@ namespace SqlServer
     /// </summary>
     public class Database
     {
-        private string connectionString;
+        private readonly string connectionString;
 
         /// <summary>
         /// Creates a new instance of the <see cref="Database"/> service.
@@ -37,13 +37,13 @@ namespace SqlServer
 
             var tableNames = await connection.QueryAsync<(string schema, string name)>(tableSql);
 
-            foreach (var table in tableNames)
+            foreach (var (schema, name) in tableNames)
             {
-                string columnSql = $"{GET_COLUMNS_SQL} WHERE TABLE_SCHEMA = '{table.schema}' AND TABLE_NAME = '{table.name}' ORDER BY ORDINAL_POSITION";
+                string columnSql = $"{GET_COLUMNS_SQL} WHERE TABLE_SCHEMA = '{schema}' AND TABLE_NAME = '{name}' ORDER BY ORDINAL_POSITION";
 
                 var columns = await connection.QueryAsync<Column>(columnSql);
 
-                tables.Add(new Table(table.schema, table.name, columns));
+                tables.Add(new Table(schema, name, columns));
             }
             return tables;
         }
@@ -120,6 +120,20 @@ namespace SqlServer
             string routineSql = $"{GET_ROUTINES_SQL} ORDER BY ROUTINE_SCHEMA, ROUTINE_NAME";
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryAsync<Routine>(routineSql);
+        }
+
+        public async Task<int> GetTableCountAsync()
+        {
+            string sql = "SELECT COUNT(1) FROM INFORMATION_SCHEMA.TABLES";
+
+            using var connection = new SqlConnection(connectionString);
+            return await connection.ExecuteScalarAsync<int>(sql);
+        }
+
+        public string GetDatabaseName()
+        {
+            using var connection = new SqlConnection(connectionString);
+            return connection.Database;
         }
 
         private const string GET_TABLES_SQL = @"
