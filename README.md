@@ -26,8 +26,3 @@ To ensure created files are overwritten:
 ## /SqlServer
 
 This project contains the business logic and database integration utilities.
-
-## / SqlServer.IntegrationTests
-
-A few simple tests.
-
