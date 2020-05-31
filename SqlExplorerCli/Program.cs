@@ -1,8 +1,6 @@
 ﻿using SqlServer;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -20,6 +18,7 @@ namespace SqlExplorerCli
 
         static async Task Main(string[] args)
         {
+            int exitCode = 0;
             HandleArgs(args);
 
             if (showHelp)
@@ -36,28 +35,22 @@ namespace SqlExplorerCli
 
                     var reports = new Reports(db, outputDirectory, overwriteFiles);
 
-                    await reports.CreateTextReportAsync();
+                    await reports.CreateDependencyReportAsync();
+                    await reports.CreateTableReportAsync();
+                    await reports.CreateViewReportAsync();
+                    await reports.CreateRoutineReportAsync();
                 }
                 catch (Exception exc)
                 {
+                    exitCode = -1;
                     ShowHelp(exc.Message);
+                }
+                finally
+                {
+                    Environment.Exit(exitCode);
                 }
             }
         }
-
-        //static async Task CreateReportsAsync()
-        //{
-        //    var db = await DatabaseFactory.CreateAsync(connectionString);
-
-        //    Reports reports = new Reports(db.GetDatabaseName(), outputDirectory, overwriteFiles);
-
-        //    var tables = await db.GetTablesAsync();
-        //    var foreignKeys = await db.GetForeignKeysAsync();
-        //    var routines = await db.GetRoutinesAsync();
-        //    var views = await db.GetViewsAsync();
-
-        //    await reports.CreateTextReportAsync(tables, foreignKeys, routines, views);
-        //}
 
         static void ShowHelp(string message = null)
         {
@@ -88,6 +81,8 @@ namespace SqlExplorerCli
             Console.WriteLine($"{newline}{newline}Usages:{newline}");
             Console.WriteLine($"To generate reports for a given database:");
             Console.WriteLine($"\t{assemblyName} -d /c/temp/db -c \"connection string\"");
+            Console.WriteLine($"{Environment.NewLine}To ensure created files are overwritten:");
+            Console.WriteLine($"\t{assemblyName} -d /c/temp/db -c \"connection string\" -o");
         }
 
         static void Validate()

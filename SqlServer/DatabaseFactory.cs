@@ -12,6 +12,15 @@ namespace SqlServer
     /// </summary>
     public static class DatabaseFactory
     {
+        /// <summary>
+        /// Create an instance of the <see cref="Database"/> object.
+        /// </summary>
+        /// <param name="connectionString">The database connection string.</param>
+        /// <param name="includeTables">An indicator of whether to include tables.</param>
+        /// <param name="includeViews">An indicator of whether to include views.</param>
+        /// <param name="includeRoutines">An indicator of whether to include routines.</param>
+        /// <param name="includeForeignKeys">An indicator of whether to include foreign keys.</param>
+        /// <returns></returns>
         public static async Task< Database> CreateAsync(string connectionString,
             bool includeTables = true,
             bool includeViews = true,
