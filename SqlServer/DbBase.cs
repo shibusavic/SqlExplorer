@@ -15,15 +15,9 @@ namespace SqlServer
         /// <param name="name">The name of the object.</param>
         public DbBase(string schema, string name)
         {
-            GlobalId = Guid.NewGuid();
             Schema = string.IsNullOrWhiteSpace(schema) ? throw new ArgumentNullException(nameof(schema)) : schema;
             Name = string.IsNullOrWhiteSpace(name) ? throw new ArgumentNullException(nameof(name)) : name;
         }
-
-        /// <summary>
-        /// Gets a unique identifier for this object.
-        /// </summary>
-        public Guid GlobalId { get; }
 
         /// <summary>
         /// Gets the schema for this object.
@@ -34,6 +28,11 @@ namespace SqlServer
         /// Gets the name of this object.
         /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// Gets the full name of the database object.
+        /// </summary>
+        public string FullName => $"{Schema}.{Name}";
 
         /// <summary>
         /// Determines whether the specified object is equal to the current object.
@@ -53,7 +52,6 @@ namespace SqlServer
         public bool Equals(DbBase other)
         {
             return other != null &&
-                   GlobalId.Equals(other.GlobalId) &&
                    Schema == other.Schema &&
                    Name == other.Name;
         }
@@ -65,7 +63,6 @@ namespace SqlServer
         public override int GetHashCode()
         {
             int hashCode = 974483119;
-            hashCode = hashCode * -1521134295 + GlobalId.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Schema);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
             return hashCode;

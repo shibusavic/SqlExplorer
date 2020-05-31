@@ -17,11 +17,13 @@ namespace SqlServer.IntegrationTests
                 .AddJsonFile("appsettings.json");
 
             configuration = builder.Build();
+
+            Database = DatabaseFactory.CreateAsync(ConnectionString).GetAwaiter().GetResult();
         }
 
         public string ConnectionString => configuration.GetConnectionString("Books");
 
-        public Database Database => new Database(ConnectionString);
+        public Database Database { get; }
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls

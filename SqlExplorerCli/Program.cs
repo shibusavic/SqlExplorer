@@ -30,8 +30,13 @@ namespace SqlExplorerCli
             {
                 try
                 {
-                    await ValidateAsync();
-                    await CreateReportsAsync();
+                    Validate();
+
+                    var db = await DatabaseFactory.CreateAsync(connectionString);
+
+                    var reports = new Reports(db, outputDirectory, overwriteFiles);
+
+                    await reports.CreateTextReportAsync();
                 }
                 catch (Exception exc)
                 {
@@ -40,25 +45,25 @@ namespace SqlExplorerCli
             }
         }
 
-        static async Task CreateReportsAsync()
-        {
-            var db = new Database(connectionString);
+        //static async Task CreateReportsAsync()
+        //{
+        //    var db = await DatabaseFactory.CreateAsync(connectionString);
 
-            Reports reports = new Reports(db.GetDatabaseName(), outputDirectory, overwriteFiles);
+        //    Reports reports = new Reports(db.GetDatabaseName(), outputDirectory, overwriteFiles);
 
-            var tables = await db.GetTablesAsync();
-            var foreignKeys = await db.GetForeignKeysAsync();
-            var routines = await db.GetRoutinesAsync();
-            var views = await db.GetViewsAsync();
+        //    var tables = await db.GetTablesAsync();
+        //    var foreignKeys = await db.GetForeignKeysAsync();
+        //    var routines = await db.GetRoutinesAsync();
+        //    var views = await db.GetViewsAsync();
 
-            reports.CreateTextReport(tables, foreignKeys, routines, views);
-        }
+        //    await reports.CreateTextReportAsync(tables, foreignKeys, routines, views);
+        //}
 
         static void ShowHelp(string message = null)
         {
             if (!string.IsNullOrWhiteSpace(message))
             {
-                Console.WriteLine($"{newline}Error: {message}{newline}");
+                Console.WriteLine($"{newline}Error: {message}");
             }
 
             Dictionary<string, string> helpDefinitions = new Dictionary<string, string>()
@@ -73,7 +78,7 @@ namespace SqlExplorerCli
 
             int maxKeyLength = helpDefinitions.Keys.Max(k => k.Length) + 1;
 
-            Console.WriteLine($"{assemblyName} {string.Join(' ', helpDefinitions.Keys)}{newline}");
+            Console.WriteLine($"{newline}{assemblyName} {string.Join(' ', helpDefinitions.Keys)}{newline}");
 
             foreach (var helpItem in helpDefinitions)
             {
@@ -85,7 +90,7 @@ namespace SqlExplorerCli
             Console.WriteLine($"\t{assemblyName} -d /c/temp/db -c \"connection string\"");
         }
 
-        static async Task ValidateAsync()
+        static void Validate()
         {
             if (string.IsNullOrWhiteSpace(connectionString)) { throw new ArgumentException("Connection string is required. Use -c."); }
             if (string.IsNullOrWhiteSpace(outputDirectory)) { throw new ArgumentException("Output directory is required. Use -d."); }
@@ -98,16 +103,6 @@ namespace SqlExplorerCli
             if (!Directory.Exists(outputDirectory))
             {
                 Directory.CreateDirectory(outputDirectory);
-            }
-
-            var db = new Database(connectionString);
-            try
-            {
-                int count = await db.GetTableCountAsync();
-            }
-            catch
-            {
-                throw new ArgumentException("Connection string may not be valid.");
             }
         }
 

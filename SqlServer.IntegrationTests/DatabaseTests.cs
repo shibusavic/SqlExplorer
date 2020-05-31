@@ -13,38 +13,47 @@ namespace SqlServer.IntegrationTests
         }
 
         [Fact]
-        public async Task GetTablesAsync()
+        public void GetDatbase()
         {
-            var service = fixture.Database;
-
-            var tables = await service.GetTablesAsync();
-
-            Assert.NotEmpty(tables);
+            var db = fixture.Database;
+            Assert.NotEmpty(db.Tables);
+            Assert.NotEmpty(db.Views);
+            Assert.NotEmpty(db.Routines);
+            Assert.NotEmpty(db.ForeignKeys);
         }
+        //[Fact]
+        //public async Task GetTablesAsync()
+        //{
+        //    var service = fixture.Database;
 
-        [Fact]
-        public async Task GetForeignKeysAsync()
-        {
-            var service = fixture.Database;
-            var fks = await service.GetForeignKeysAsync();
+        //    var tables = await service.GetTablesAsync();
 
-            Assert.NotEmpty(fks);
-        }
+        //    Assert.NotEmpty(tables);
+        //}
 
-        [Fact]
-        public async Task GetViewsAsync()
-        {
-            var service = fixture.Database;
-            var views = await service.GetViewsAsync();
-            Assert.NotEmpty(views);
-        }
+        //[Fact]
+        //public async Task GetForeignKeysAsync()
+        //{
+        //    var service = fixture.Database;
+        //    var fks = await service.GetForeignKeysAsync();
 
-        [Fact]
-        public async Task GetRoutinesAsync()
-        {
-            var service = fixture.Database;
-            var routines = await service.GetRoutinesAsync();
-            Assert.NotEmpty(routines);
-        }
+        //    Assert.NotEmpty(fks);
+        //}
+
+        //[Fact]
+        //public async Task GetViewsAsync()
+        //{
+        //    var service = fixture.Database;
+        //    var views = await service.GetViewsAsync();
+        //    Assert.NotEmpty(views);
+        //}
+
+        //[Fact]
+        //public async Task GetRoutinesAsync()
+        //{
+        //    var service = fixture.Database;
+        //    var routines = await service.GetRoutinesAsync();
+        //    Assert.NotEmpty(routines);
+        //}
     }
 }

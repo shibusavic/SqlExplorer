@@ -1,192 +1,154 @@
-﻿using Dapper;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SqlServer
 {
     /// <summary>
-    /// A database service.
+    /// Represents a Microsoft Sql Server database structure.
     /// </summary>
-    public class Database
+    public sealed class Database
     {
-        private readonly string connectionString;
-
         /// <summary>
-        /// Creates a new instance of the <see cref="Database"/> service.
+        /// Creates a new instance of the <see cref="Database"/> class.
         /// </summary>
-        /// <param name="connectionString">The Sql Server connection string.</param>
-        public Database(string connectionString)
+        /// <param name="name">The name of the database.</param>
+        /// <param name="tables">A collection of <see cref="Table"/> instances.</param>
+        /// <param name="foreignKeys">A collectoin of <see cref="ForeignKey"/> instances.</param>
+        /// <param name="routines">A collection of <see cref="Routine"/> instances.</param>
+        /// <param name="views">A collection of <see cref="View"/> instances.</param>
+        public Database(string name,
+            IEnumerable<Table> tables,
+            IEnumerable<ForeignKey> foreignKeys,
+            IEnumerable<Routine> routines,
+            IEnumerable<View> views)
         {
-            this.connectionString = string.IsNullOrWhiteSpace(connectionString) ? throw new ArgumentNullException(nameof(connectionString)) : connectionString;
+            Name = string.IsNullOrWhiteSpace(name) ? throw new ArgumentNullException(nameof(name)) : name;
+            Tables = new ReadOnlyCollection<Table>(tables?.ToList() ?? new List<Table>());
+            ForeignKeys = new ReadOnlyCollection<ForeignKey>(foreignKeys?.ToList() ?? new List<ForeignKey>());
+            Routines = new ReadOnlyCollection<Routine>(routines?.ToList() ?? new List<Routine>());
+            Views = new ReadOnlyCollection<View>(views?.ToList() ?? new List<View>());
         }
 
         /// <summary>
-        /// Gets a collection of <see cref="Table"/> objects for the database.
+        /// Gets the name of the database.
         /// </summary>
-        /// <returns>A task representing the asyncronous operation.
-        /// The task contains a collection of <see cref="Table"/> objects.</returns>
-        public async Task<IEnumerable<Table>> GetTablesAsync()
+        public string Name { get; }
+
+        /// <summary>
+        /// Gets a read-only collection of <see cref="Table"/> objects.
+        /// </summary>
+        public IReadOnlyCollection<Table> Tables { get; }
+
+        /// <summary>
+        /// Gets a read-only collection of <see cref="ForeignKey"/> objects.
+        /// </summary>
+        public IReadOnlyCollection<ForeignKey> ForeignKeys { get; }
+
+        /// <summary>
+        /// Gets a read-only collection of <see cref="Routine"/> objects.
+        /// </summary>
+        public IReadOnlyCollection<Routine> Routines { get; }
+
+        /// <summary>
+        /// Gets a read-only collection of <see cref="View"/> objects.
+        /// </summary>
+        public IReadOnlyCollection<View> Views { get; }
+
+        /// <summary>
+        /// Gets a collection of <see cref="ForeignKey"/> objects where
+        /// the provided table is the parent.
+        /// </summary>
+        /// <param name="table">The parent table to evalutate.</param>
+        /// <returns>A collection of <see cref="ForeignKey"/> objects.</returns>
+        public IEnumerable<ForeignKey> GetChildForeignKeysForTable(Table table)
         {
-            List<Table> tables = new List<Table>();
-            string tableSql = $"{GET_TABLES_SQL} WHERE TABLE_NAME <> 'sysdiagrams' AND TABLE_TYPE = 'BASE TABLE' ORDER BY [TABLE_SCHEMA], [TABLE_NAME]";
+            return ForeignKeys.Where(f => f.ParentTable.Equals(table));
+        }
 
-            using var connection = new SqlConnection(connectionString);
+        /// <summary>
+        /// Get a collection of <see cref="View"/> objects that MAY contain references
+        /// to the provided table.
+        /// </summary>
+        /// <param name="table">The table for which to search.</param>
+        /// <returns>A collection of distinct <see cref="View"/> objects.</returns>
+        /// <remarks>This method uses a regular expression to find references; it may
+        /// inadvertently match on comments or strings containing the table name.</remarks>
+        public IEnumerable<View> GetViewsReferencingTable(Table table)
+        {
+            Regex regexPotentialMatches = new Regex($@"(\[?[^\s]*\]?)?\.?\[?{table.Name}\]?", RegexOptions.IgnoreCase | RegexOptions.Multiline);
 
-            var tableNames = await connection.QueryAsync<(string schema, string name)>(tableSql);
+            HashSet<View> matchingViews = new HashSet<View>();
 
-            foreach (var (schema, name) in tableNames)
+            foreach (var view in Views)
             {
-                string columnSql = $"{GET_COLUMNS_SQL} WHERE TABLE_SCHEMA = '{schema}' AND TABLE_NAME = '{name}' ORDER BY ORDINAL_POSITION";
-
-                var columns = await connection.QueryAsync<Column>(columnSql);
-
-                tables.Add(new Table(schema, name, columns));
+                MatchCollection matches = regexPotentialMatches.Matches(view.Definition);
+                if (matches.Count > 0)
+                {
+                    foreach (Match match in matches)
+                    {
+                        var wholeMatch = match.Groups[0].Value;
+                        if (wholeMatch.Contains("."))
+                        {
+                            var matchedSchema = match.Groups[1].Value.Replace("[", "").Replace("]", "").Trim();
+                            if (matchedSchema.Equals(table.Schema, StringComparison.OrdinalIgnoreCase))
+                            {
+                                matchingViews.Add(view);
+                            }
+                        }
+                        else
+                        {
+                            matchingViews.Add(view);
+                        }
+                    }
+                }
             }
-            return tables;
+
+            return matchingViews;
         }
 
         /// <summary>
-        /// Gets a specific <see cref="Table"/> from the database.
+        /// Get a collection of <see cref="Routine"/> objects that MAY contain references
+        /// to the provided table.
         /// </summary>
-        /// <param name="schema">The schema of the table.</param>
-        /// <param name="name">The name of the table.</param>
-        /// <returns>A task representing the asyncronous operation.
-        /// The task contains a <see cref="Table"/> object.</returns>
-        public async Task<Table> GetTableAsync(string schema, string name)
+        /// <param name="table">The table for which to search.</param>
+        /// <returns>A collection of distinct <see cref="Routine"/> objects.</returns>
+        /// <remarks>This method uses a regular expression to find references; it may
+        /// inadvertently match on comments or strings containing the table name.</remarks>
+        public IEnumerable<Routine> GetRoutinesReferencingTable(Table table)
         {
-            using var connection = new SqlConnection(connectionString);
+            Regex regexPotentialMatches = new Regex($@"(\[?[^\s]*\]?)?\.?\[?{table.Name}\]?", RegexOptions.IgnoreCase | RegexOptions.Multiline);
 
-            string columnSql = $"{GET_COLUMNS_SQL} WHERE TABLE_SCHEMA = '{schema}' AND TABLE_NAME = '{name}' ORDER BY ORDINAL_POSITION";
+            HashSet<Routine> matchingRoutines = new HashSet<Routine>();
 
-            var columns = await connection.QueryAsync<Column>(columnSql);
-
-            if (columns.Any())
+            foreach (var routine in Routines)
             {
-                return new Table(schema, name, columns);
+                MatchCollection matches = regexPotentialMatches.Matches(routine.Definition);
+                if (matches.Count > 0)
+                {
+                    foreach (Match match in matches)
+                    {
+                        var wholeMatch = match.Groups[0].Value;
+                        if (wholeMatch.Contains("."))
+                        {
+                            var matchedSchema = match.Groups[1].Value.Replace("[", "").Replace("]", "").Trim();
+                            if (matchedSchema.Equals(table.Schema, StringComparison.OrdinalIgnoreCase))
+                            {
+                                matchingRoutines.Add(routine);
+                            }
+                        }
+                        else
+                        {
+                            matchingRoutines.Add(routine);
+                        }
+                    }
+                }
             }
 
-            return null;
+            return matchingRoutines;
         }
-
-        /// <summary>
-        /// Gets a collection of <see cref="ForeignKey"/> objects from the database.
-        /// </summary>
-        /// <returns>A task representing the asyncronous operation.
-        /// The task contains a collection of <see cref="ForeignKey"/> objects.</returns>
-        public async Task<IEnumerable<ForeignKey>> GetForeignKeysAsync()
-        {
-            List<ForeignKey> foreignKeys = new List<ForeignKey>();
-
-            string fkSql = $"{GET_FOREIGN_KEYS_SQL} order by [Schema], TableName";
-
-            using var connection = new SqlConnection(connectionString);
-
-            var fks = await connection.QueryAsync<ForeignKeyDto>(fkSql);
-
-            foreach (var fk in fks)
-            {
-                var table = await GetTableAsync(fk.Schema, fk.TableName);
-                var refTable = await GetTableAsync(fk.ReferenceSchema, fk.ReferenceTableName);
-                foreignKeys.Add(new ForeignKey(table.Schema, fk.Name, refTable, fk.ReferenceColumnName, table, fk.ReferenceColumnName));
-            }
-
-            return foreignKeys;
-        }
-
-        /// <summary>
-        /// Get a collection of <see cref="View"/> objects from the database.
-        /// </summary>
-        /// <returns>A task representing the asyncronous operation.
-        /// The task contains a collection of <see cref="View"/> objects.</returns>
-        public async Task<IEnumerable<View>> GetViewsAsync()
-        {
-            string viewSql = $"{GET_VIEWS_SQL} ORDER BY TABLE_SCHEMA, TABLE_NAME";
-
-            using var connection = new SqlConnection(connectionString);
-
-            return await connection.QueryAsync<View>(viewSql);
-        }
-
-        /// <summary>
-        /// Gets a collection of <see cref="Routine"/> objects from the database.
-        /// </summary>
-        /// <returns>A task representing the asyncronous operation.
-        /// The task contains a collection of <see cref="Routine"/> objects.</returns>
-        public async Task<IEnumerable<Routine>> GetRoutinesAsync()
-        {
-            string routineSql = $"{GET_ROUTINES_SQL} ORDER BY ROUTINE_SCHEMA, ROUTINE_NAME";
-            using var connection = new SqlConnection(connectionString);
-            return await connection.QueryAsync<Routine>(routineSql);
-        }
-
-        public async Task<int> GetTableCountAsync()
-        {
-            string sql = "SELECT COUNT(1) FROM INFORMATION_SCHEMA.TABLES";
-
-            using var connection = new SqlConnection(connectionString);
-            return await connection.ExecuteScalarAsync<int>(sql);
-        }
-
-        public string GetDatabaseName()
-        {
-            using var connection = new SqlConnection(connectionString);
-            return connection.Database;
-        }
-
-        private const string GET_TABLES_SQL = @"
-SELECT
-[TABLE_SCHEMA] AS [SCHEMA],
-[TABLE_NAME] AS [NAME]
-FROM [INFORMATION_SCHEMA].[TABLES]
-";
-
-        private const string GET_COLUMNS_SQL = @"
-SELECT
-TABLE_SCHEMA AS [SCHEMA],
-COLUMN_NAME AS [NAME],
-ORDINAL_POSITION AS ORDINALPOSITION,
-COLUMN_DEFAULT AS COLUMNDEFAULT,
-CAST(CASE IS_NULLABLE
-WHEN 'YES' THEN 1
-ELSE 0
-END AS BIT) AS ISNULLABLE,
-DATA_TYPE AS DATATYPE,
-CHARACTER_MAXIMUM_LENGTH AS MAXLENGTH,
-NUMERIC_PRECISION AS NUMERICPRECISION
-FROM INFORMATION_SCHEMA.COLUMNS
-";
-
-        public const string GET_FOREIGN_KEYS_SQL = @"
-SELECT
-f.name AS [NAME],
-SCHEMA_NAME(f.SCHEMA_ID) AS [SCHEMA],
-OBJECT_NAME(f.parent_object_id) AS TableName,
-COL_NAME(fc.parent_object_id,fc.parent_column_id) AS ColumnName,
-SCHEMA_NAME(o.SCHEMA_ID) AS ReferenceSchema,
-OBJECT_NAME (f.referenced_object_id) AS ReferenceTableName,
-COL_NAME(fc.referenced_object_id,fc.referenced_column_id) AS ReferenceColumnName
-FROM sys.foreign_keys AS f
-INNER JOIN sys.foreign_key_columns AS fc ON f.OBJECT_ID = fc.constraint_object_id
-INNER JOIN sys.objects AS o ON o.OBJECT_ID = fc.referenced_object_id
-";
-
-        public const string GET_VIEWS_SQL = @"
-SELECT
-TABLE_SCHEMA AS [SCHEMA],
-TABLE_NAME AS [NAME],
-VIEW_DEFINITION AS [DEFINITION]
-FROM INFORMATION_SCHEMA.VIEWS
-";
-
-        public const string GET_ROUTINES_SQL = @"
-SELECT
-[ROUTINE_SCHEMA] AS [SCHEMA],
-[ROUTINE_NAME] AS [NAME],
-[ROUTINE_DEFINITION] AS [DEFINITION],
-[ROUTINE_TYPE] AS [ROUTINETYPE]
-FROM [INFORMATION_SCHEMA].[ROUTINES]";
     }
 }
