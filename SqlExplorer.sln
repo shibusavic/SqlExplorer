@@ -5,9 +5,14 @@ VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqlExplorerCli", "SqlExplorerCli\SqlExplorerCli.csproj", "{605709BB-B9D9-402B-B591-84E77CB59E2B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlServer", "SqlServer\SqlServer.csproj", "{D9C960E5-F300-4E45-832A-DCF706A94A32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqlServer", "SqlServer\SqlServer.csproj", "{D9C960E5-F300-4E45-832A-DCF706A94A32}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlServer.IntegrationTests", "SqlServer.IntegrationTests\SqlServer.IntegrationTests.csproj", "{4F181032-69F5-49E5-950E-8B1CC1B190F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqlServer.IntegrationTests", "SqlServer.IntegrationTests\SqlServer.IntegrationTests.csproj", "{4F181032-69F5-49E5-950E-8B1CC1B190F8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BAE8BF04-6EC1-4EF3-8A72-BDC492A92B9D}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
