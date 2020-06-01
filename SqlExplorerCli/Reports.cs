@@ -80,7 +80,7 @@ namespace SqlExplorerCli
 
             foreach (var view in database.Views.OrderBy(v => v.FullName))
             {
-                var def = view.Definition.Length < 50 ? view.Definition.Replace(Environment.NewLine, " ") : view.Definition.Substring(0, 50).Replace(Environment.NewLine," ");
+                var def = view.Definition.Length < 50 ? view.Definition.Replace(Environment.NewLine, " ") : view.Definition.Substring(0, 50).Replace(Environment.NewLine, " ");
                 line = $"{view.Schema},{view.Name},{def}{Environment.NewLine}";
                 buffer = Encoding.UTF8.GetBytes(line);
                 await stream.WriteAsync(buffer, 0, buffer.Length);
@@ -128,7 +128,7 @@ namespace SqlExplorerCli
             var fileName = $"{directoryName}\\{CleanupDbName(database.Name)}_Dependency.txt";
             CheckExistingFile(fileName);
 
-            var sortedTables = SortTablesByDependency();
+            var sortedTables = database.GetTablesSortedByDependency();
 
             using Stream stream = File.Create(fileName);
 
@@ -175,42 +175,6 @@ namespace SqlExplorerCli
 
             await stream.FlushAsync();
             stream.Close();
-        }
-
-        private IEnumerable<Table> SortTablesByDependency()
-        {
-            LinkedList<Table> tableList = new LinkedList<Table>(database.Tables);
-
-            foreach (var table in database.Tables)
-            {
-                int parentPosition = tableList.ToList().IndexOf(table);
-                var childrenFk = database.ForeignKeys.Where(f => f.ParentTable.Schema == table.Schema
-                    && f.ParentTable.Name == table.Name);
-
-                bool move = false;
-                do
-                {
-                    move = false;
-                    childrenFk.ToList().ForEach(c =>
-                    {
-                        if (c.ChildTable.FullName != table.FullName)
-                        {
-                            var childTableNode = tableList.Find(tableList.FirstOrDefault(t => t.FullName == c.ChildTable.FullName));
-                            int childPosition = tableList.ToList().IndexOf(childTableNode.Value);
-                            if (childPosition < parentPosition)
-                            {
-                                var parentTableNode = tableList.Find(table);
-                                tableList.Remove(childTableNode);
-                                tableList.AddAfter(parentTableNode, childTableNode);
-                                move = true;
-                            }
-                        }
-                    });
-                }
-                while (move == true);
-            }
-
-            return tableList;
         }
 
         private void CheckExistingFile(string filename)

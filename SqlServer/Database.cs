@@ -150,5 +150,44 @@ namespace SqlServer
 
             return matchingRoutines;
         }
+
+        /// <summary>
+        /// Get the list of tables sorted by their dependencies.
+        /// </summary>
+        /// <returns>A collection of <see cref="Table"/> objects.</returns>
+        public IEnumerable<Table> GetTablesSortedByDependency()
+        {
+            LinkedList<Table> tableList = new LinkedList<Table>(Tables);
+
+            bool move = false;
+            do
+            {
+                move = false;
+                foreach (var table in Tables)
+                {
+                    int parentPosition = tableList.ToList().IndexOf(table);
+                    var childrenFk = ForeignKeys.Where(f => f.ParentTable.FullName == table.FullName);
+
+                    childrenFk.ToList().ForEach(c =>
+                    {
+                        if (c.ChildTable.FullName != table.FullName)
+                        {
+                            var childTableNode = tableList.Find(tableList.FirstOrDefault(t => t.FullName == c.ChildTable.FullName));
+                            int childPosition = tableList.ToList().IndexOf(childTableNode.Value);
+                            if (childPosition < parentPosition)
+                            {
+                                var parentTableNode = tableList.Find(table);
+                                tableList.Remove(childTableNode);
+                                tableList.AddAfter(parentTableNode, childTableNode);
+                                move = true;
+                            }
+                        }
+                    });
+                }
+            }
+            while (move == true);
+
+            return tableList;
+        }
     }
 }
