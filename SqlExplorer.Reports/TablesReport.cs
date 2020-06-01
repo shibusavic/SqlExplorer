@@ -16,9 +16,9 @@ namespace SqlExplorer.Reports
         /// <param name="database">The <see cref="Database"/>.</param>
         /// <param name="directoryName">The output directory name.</param>
         /// <param name="overwriteFiles">An indicator of whether to overwrite files when they exist.</param>
-        public TablesReport(Database database, string directoryName, bool overwriteFiles = false) : base(database, directoryName, overwriteFiles)
-        {
-        }
+        public TablesReport(Database database, string directoryName, bool overwriteFiles = false)
+            : base(database, directoryName, overwriteFiles)
+        { }
 
         /// <summary>
         /// Generate the report.

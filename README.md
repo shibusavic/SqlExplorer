@@ -17,12 +17,33 @@ SqlExplorer {--connection-string | -c} <connection string> {--output-directory |
 
 Usages:
 
+Note: if using on a Linux terminal and when a connection string has a special character (e.g., in the password), use single quotes as shown below.
+The Windows command line can handle special characters within regular quotes.
+
 To generate reports for a given database:
-        `SqlExplorer -d /c/temp/db -c "connection string"`
+
+`SqlExplorer -d /c/temp/db -c 'connection string'`
+
+or
+
+`SqlExplorer -d c:\temp\db -c "connection string"`
 
 To ensure created files are overwritten:
-        `SqlExplorer -d /c/temp/db -c "connection string" -o`
 
-## /SqlServer
+`SqlExplorer -d /c/temp/db -c 'connection string' -o`
+
+or
+
+`SqlExplorer -d c:\temp\db -c "connection string" -o`
+
+## /SqlExplorer.MsSqlServer
 
 This project contains the business logic and database integration utilities.
+
+## /SqlExplorer.MsSqlServer.UnitTests
+
+This project contains unit tests for SqlExplorer.MsSqlServer.
+
+## /SqlExplorer.Reports
+
+This project contains report generation classes.

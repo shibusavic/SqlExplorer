@@ -6,7 +6,7 @@ namespace SqlExplorer.MsSqlServer
     /// <summary>
     /// Reprsents a Sql Server View.
     /// </summary>
-    public class View : DbBase, IEquatable<View>
+    public sealed class View : DbBase, IEquatable<View>
     {
         /// <summary>
         /// Creates a new instance of the <see cref="View"/> class.

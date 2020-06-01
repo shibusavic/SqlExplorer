@@ -6,7 +6,7 @@ namespace SqlExplorer.MsSqlServer
     /// <summary>
     /// Represents a Sql Server Routine.
     /// </summary>
-    public class Routine : DbBase, IEquatable<Routine>
+    public sealed class Routine : DbBase, IEquatable<Routine>
     {
         /// <summary>
         /// Creates a new instance of the <see cref="Routine"/> class.

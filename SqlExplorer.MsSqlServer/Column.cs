@@ -6,7 +6,7 @@ namespace SqlExplorer.MsSqlServer
     /// <summary>
     /// Represents a Sql Server table column.
     /// </summary>
-    public class Column : DbBase, IEquatable<Column>
+    public sealed class Column : DbBase, IEquatable<Column>
     {
         /// <summary>
         /// Creates a new instance of the <see cref="Column"/> class.

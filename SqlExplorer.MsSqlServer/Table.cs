@@ -7,7 +7,7 @@ namespace SqlExplorer.MsSqlServer
     /// <summary>
     /// Represents a Sql Server Table.
     /// </summary>
-    public class Table : DbBase, IEquatable<Table>
+    public sealed class Table : DbBase, IEquatable<Table>
     {
         /// <summary>
         /// Creates a new instance of the <see cref="Table"/> class.

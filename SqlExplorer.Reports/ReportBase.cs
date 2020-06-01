@@ -34,6 +34,14 @@ namespace SqlExplorer.Reports
         /// <returns>A task that represents the underlying operation.</returns>
         public abstract Task GenerateAsync();
 
+        protected Stream CreateStream(string filename)
+        {
+            if (string.IsNullOrWhiteSpace(filename)) { throw new ArgumentNullException(nameof(filename)); }
+            CheckExistingFile(filename);
+
+            return File.Create(filename);
+        }
+
         protected void CheckExistingFile(string filename)
         {
             if (File.Exists(filename) && !overwriteFiles)
@@ -45,14 +53,6 @@ namespace SqlExplorer.Reports
         protected string CleanupDbName(string databaseName)
         {
             return databaseName.Replace(" ", "_");
-        }
-
-        protected Stream CreateStream(string filename)
-        {
-            if (string.IsNullOrWhiteSpace(filename)) { throw new ArgumentNullException(nameof(filename)); }
-            CheckExistingFile(filename);
-
-            return File.Create(filename);
         }
 
         protected async Task WriteToStreamAsync(Stream stream, string message, bool flush = false)

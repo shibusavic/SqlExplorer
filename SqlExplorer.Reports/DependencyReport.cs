@@ -19,8 +19,7 @@ namespace SqlExplorer.Reports
         /// <param name="overwriteFiles">An indicator of whether to overwrite files when they exist.</param>
         public DependencyReport(Database database, string directoryName, bool overwriteFiles = false)
             : base(database, directoryName, overwriteFiles)
-        {
-        }
+        { }
 
         /// <summary>
         /// Generate the report.
@@ -29,9 +28,9 @@ namespace SqlExplorer.Reports
         public override async Task GenerateAsync()
         {
             using Stream stream = CreateStream($"{directoryName}\\{CleanupDbName(database.Name)}_Dependency.txt");
-            
+
             var sortedTables = database.GetTablesSortedByDependency();
-            
+
             foreach (var table in sortedTables)
             {
                 StringBuilder tableInfo = new StringBuilder();

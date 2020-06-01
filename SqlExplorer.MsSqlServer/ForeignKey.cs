@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace SqlExplorer.MsSqlServer
 {
     /// <summary>
     /// Represents a Sql Server Foreign Key.
     /// </summary>
-    public class ForeignKey : DbBase, IEquatable<ForeignKey>
+    public sealed class ForeignKey : DbBase, IEquatable<ForeignKey>
     {
         /// <summary>
         /// Creates a new instance of the <see cref="ForeignKey"/> class.

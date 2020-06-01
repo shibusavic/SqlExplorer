@@ -22,13 +22,13 @@ namespace SqlExplorerCli
             int exitCode = 0;
             HandleArgs(args);
 
-            if (showHelp)
+            try
             {
-                ShowHelp();
-            }
-            else
-            {
-                try
+                if (showHelp)
+                {
+                    ShowHelp();
+                }
+                else
                 {
                     Validate();
 
@@ -38,16 +38,17 @@ namespace SqlExplorerCli
                     await GenerateReportAsync<TablesReport>(db, outputDirectory, overwriteFiles);
                     await GenerateReportAsync<ViewsReport>(db, outputDirectory, overwriteFiles);
                     await GenerateReportAsync<RoutinesReport>(db, outputDirectory, overwriteFiles);
+
                 }
-                catch (Exception exc)
-                {
-                    exitCode = -1;
-                    ShowHelp(exc.Message);
-                }
-                finally
-                {
-                    Environment.Exit(exitCode);
-                }
+            }
+            catch (Exception exc)
+            {
+                exitCode = -1;
+                ShowHelp(exc.Message);
+            }
+            finally
+            {
+                Environment.Exit(exitCode);
             }
         }
 
@@ -55,55 +56,6 @@ namespace SqlExplorerCli
         {
             T report = (T)Activator.CreateInstance(typeof(T), database, directoryName, overwriteFiles);
             await report.GenerateAsync();
-        }
-
-        static void ShowHelp(string message = null)
-        {
-            if (!string.IsNullOrWhiteSpace(message))
-            {
-                Console.WriteLine($"{newline}Error: {message}");
-            }
-
-            Dictionary<string, string> helpDefinitions = new Dictionary<string, string>()
-            {
-                { "{--connection-string | -c} <connection string>","Define the connection string." },
-                { "{--output-directory | -d} <directory>]","Define the output directory." },
-                { "[--overwrite | -o]","Overwrite output files if they exists." },
-                { "[--help | -h | ?]","Show this help." }
-            };
-
-            string assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
-
-            int maxKeyLength = helpDefinitions.Keys.Max(k => k.Length) + 1;
-
-            Console.WriteLine($"{newline}{assemblyName} {string.Join(' ', helpDefinitions.Keys)}{newline}");
-
-            foreach (var helpItem in helpDefinitions)
-            {
-                Console.WriteLine($"{helpItem.Key.PadRight(maxKeyLength)}\t{helpItem.Value}");
-            }
-
-            Console.WriteLine($"{newline}{newline}Usages:{newline}");
-            Console.WriteLine($"To generate reports for a given database:");
-            Console.WriteLine($"\t{assemblyName} -d /c/temp/db -c \"connection string\"");
-            Console.WriteLine($"{Environment.NewLine}To ensure created files are overwritten:");
-            Console.WriteLine($"\t{assemblyName} -d /c/temp/db -c \"connection string\" -o");
-        }
-
-        static void Validate()
-        {
-            if (string.IsNullOrWhiteSpace(connectionString)) { throw new ArgumentException("Connection string is required. Use -c."); }
-            if (string.IsNullOrWhiteSpace(outputDirectory)) { throw new ArgumentException("Output directory is required. Use -d."); }
-
-            while (outputDirectory.EndsWith("/") || outputDirectory.EndsWith("\\"))
-            {
-                outputDirectory = outputDirectory[0..^1];
-            }
-
-            if (!Directory.Exists(outputDirectory))
-            {
-                Directory.CreateDirectory(outputDirectory);
-            }
         }
 
         static void HandleArgs(string[] args)
@@ -137,6 +89,55 @@ namespace SqlExplorerCli
                         throw new ArgumentException($"Unknown argument: {args[a]}");
                 }
             }
+        }
+
+        static void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(connectionString)) { throw new ArgumentException("Connection string is required. Use -c."); }
+            if (string.IsNullOrWhiteSpace(outputDirectory)) { throw new ArgumentException("Output directory is required. Use -d."); }
+
+            while (outputDirectory.EndsWith("/") || outputDirectory.EndsWith("\\"))
+            {
+                outputDirectory = outputDirectory[0..^1];
+            }
+
+            if (!Directory.Exists(outputDirectory))
+            {
+                Directory.CreateDirectory(outputDirectory);
+            }
+        }
+
+        static void ShowHelp(string message = null)
+        {
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                Console.WriteLine($"{newline}Error: {message}");
+            }
+
+            Dictionary<string, string> helpDefinitions = new Dictionary<string, string>()
+            {
+                { "{--connection-string | -c} <connection string>","Define the connection string." },
+                { "{--output-directory | -d} <directory>]","Define the output directory." },
+                { "[--overwrite | -o]","Overwrite output files if they exists." },
+                { "[--help | -h | ?]","Show this help." }
+            };
+
+            string assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+
+            int maxKeyLength = helpDefinitions.Keys.Max(k => k.Length) + 1;
+
+            Console.WriteLine($"{newline}{assemblyName} {string.Join(' ', helpDefinitions.Keys)}{newline}");
+
+            foreach (var helpItem in helpDefinitions)
+            {
+                Console.WriteLine($"{helpItem.Key.PadRight(maxKeyLength)}\t{helpItem.Value}");
+            }
+
+            Console.WriteLine($"{newline}{newline}Usages:{newline}");
+            Console.WriteLine($"To generate reports for a given database:");
+            Console.WriteLine($"\t{assemblyName} -d /c/temp/db -c \"connection string\"");
+            Console.WriteLine($"{Environment.NewLine}To ensure created files are overwritten:");
+            Console.WriteLine($"\t{assemblyName} -d /c/temp/db -c \"connection string\" -o");
         }
     }
 }
