@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
-namespace SqlServer.UnitTests
+namespace SqlExplorer.MsSqlServer.UnitTests
 {
     public class DatabaseTests
     {
@@ -52,9 +52,11 @@ namespace SqlServer.UnitTests
 
         private Table CreateTable(string schema, string name, string fkColumn = null, string fkTableName = null)
         {
-            List<Column> columns = new List<Column>();
-            columns.Add(new Column(schema, "Id", 1, null, false, "Int", 0, 0));
-            columns.Add(new Column(schema, "Name", 2, null, false, "VarChar", 50, 0));
+            List<Column> columns = new List<Column>
+            {
+                new Column(schema, "Id", 1, null, false, "Int", 0, 0),
+                new Column(schema, "Name", 2, null, false, "VarChar", 50, 0)
+            };
 
             if (fkColumn != null && fkTableName != null)
             {

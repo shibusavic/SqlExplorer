@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SqlServer
+namespace SqlExplorer.MsSqlServer
 {
     /// <summary>
     /// Represents a Sql Server Table.

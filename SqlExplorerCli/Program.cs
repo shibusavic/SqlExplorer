@@ -1,4 +1,4 @@
-﻿using SqlServer;
+﻿using SqlExplorer.MsSqlServer;
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SqlServer\SqlServer.csproj" />
+    <ProjectReference Include="..\SqlExplorer.MsSqlServer\SqlExplorer.MsSqlServer.csproj" />
   </ItemGroup>
 
 </Project>

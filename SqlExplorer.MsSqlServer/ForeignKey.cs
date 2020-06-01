@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SqlServer
+namespace SqlExplorer.MsSqlServer
 {
     /// <summary>
     /// Represents a Sql Server Foreign Key.

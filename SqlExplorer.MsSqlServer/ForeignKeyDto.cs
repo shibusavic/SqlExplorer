@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SqlServer
+namespace SqlExplorer.MsSqlServer
 {
     /// <summary>
     /// Represents a DTO for foreign keys.

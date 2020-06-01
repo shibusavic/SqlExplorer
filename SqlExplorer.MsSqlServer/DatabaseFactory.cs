@@ -5,7 +5,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SqlServer
+namespace SqlExplorer.MsSqlServer
 {
     /// <summary>
     /// A factory for constructing <see cref="Database"/> objects.

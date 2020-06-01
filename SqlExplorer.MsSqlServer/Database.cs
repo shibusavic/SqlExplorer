@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace SqlServer
+namespace SqlExplorer.MsSqlServer
 {
     /// <summary>
     /// Represents a Microsoft Sql Server database structure.
