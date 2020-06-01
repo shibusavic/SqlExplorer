@@ -21,7 +21,7 @@ namespace SqlExplorer.MsSqlServer
         /// <param name="includeRoutines">An indicator of whether to include routines.</param>
         /// <param name="includeForeignKeys">An indicator of whether to include foreign keys.</param>
         /// <returns></returns>
-        public static async Task< Database> CreateAsync(string connectionString,
+        public static async Task<Database> CreateAsync(string connectionString,
             bool includeTables = true,
             bool includeViews = true,
             bool includeRoutines = true,
@@ -86,9 +86,7 @@ namespace SqlExplorer.MsSqlServer
         private static async Task<IEnumerable<View>> GetViewsAsync(string connectionString)
         {
             string viewSql = $"{GET_VIEWS_SQL} ORDER BY TABLE_SCHEMA, TABLE_NAME";
-
             using var connection = new SqlConnection(connectionString);
-
             return await connection.QueryAsync<View>(viewSql);
         }
 
