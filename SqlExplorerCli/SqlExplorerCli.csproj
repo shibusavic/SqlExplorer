@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SqlExplorer.MsSqlServer\SqlExplorer.MsSqlServer.csproj" />
+    <ProjectReference Include="..\SqlExplorer.Reports\SqlExplorer.Reports.csproj" />
   </ItemGroup>
 
 </Project>

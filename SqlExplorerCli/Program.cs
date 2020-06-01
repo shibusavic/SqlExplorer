@@ -1,4 +1,5 @@
 ﻿using SqlExplorer.MsSqlServer;
+using SqlExplorer.Reports;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,12 +34,10 @@ namespace SqlExplorerCli
 
                     var db = await DatabaseFactory.CreateAsync(connectionString);
 
-                    var reports = new Reports(db, outputDirectory, overwriteFiles);
-
-                    await reports.CreateDependencyReportAsync();
-                    await reports.CreateTableReportAsync();
-                    await reports.CreateViewReportAsync();
-                    await reports.CreateRoutineReportAsync();
+                    await GenerateReportAsync<DependencyReport>(db, outputDirectory, overwriteFiles);
+                    await GenerateReportAsync<TablesReport>(db, outputDirectory, overwriteFiles);
+                    await GenerateReportAsync<ViewsReport>(db, outputDirectory, overwriteFiles);
+                    await GenerateReportAsync<RoutinesReport>(db, outputDirectory, overwriteFiles);
                 }
                 catch (Exception exc)
                 {
@@ -50,6 +49,12 @@ namespace SqlExplorerCli
                     Environment.Exit(exitCode);
                 }
             }
+        }
+
+        static async Task GenerateReportAsync<T>(Database database, string directoryName, bool overwriteFiles) where T : ReportBase
+        {
+            T report = (T)Activator.CreateInstance(typeof(T), database, directoryName, overwriteFiles);
+            await report.GenerateAsync();
         }
 
         static void ShowHelp(string message = null)

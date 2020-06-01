@@ -1,8 +1,7 @@
 {
   "profiles": {
     "SqlExplorerCli": {
-      "commandName": "Project",
-      "commandLineArgs": "-c \"Server=localhost;Database=Books;User Id=sa;Password=Th1daatadwwck!;\" -d c:\\temp\\db -o"
+      "commandName": "Project"
     }
   }
 }
